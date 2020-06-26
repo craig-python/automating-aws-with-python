@@ -9,6 +9,7 @@ ipython = "*"
 [packages]
 boto3 = "*"
 click = "*"
+python-language-server = {extras = ["all"], version = "*"}
 
 [requires]
 python_version = "3.7"
