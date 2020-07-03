@@ -57,7 +57,6 @@ class BucketManager:
     def init_bucket(self, bucket_name):
         """Create new bucket, or return the existing one."""
         s3_bucket = None
-
         try:
             if self.session.region_name == 'us-east-1':
                 s3_bucket = self.s3.create_bucket(
@@ -146,7 +145,8 @@ class BucketManager:
         elif len(hashes) == 1:
             return '"{}"'.format(hashes[0].hexdigest())
         else:
-            md5_hash = self.hash_data(reduce(lambda x, y: x + y, (h.digest() for h in hashes)))
+            digests = (h.digest() for h in hashes)
+            md5_hash = self.hash_data(reduce(lambda x, y: x + y, digests))
             return '"{}-{}"'.format(md5_hash.hexdigest(), len(hashes))
 
     def upload_file(self, bucket, path, key):
