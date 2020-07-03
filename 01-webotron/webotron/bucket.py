@@ -5,11 +5,11 @@
 from pathlib import Path
 import mimetypes
 from functools import reduce
+from hashlib import md5
 
 import boto3
 from botocore.exceptions import ClientError
 
-from hashlib import md5
 import util
 
 
@@ -27,6 +27,10 @@ class BucketManager:
             multipart_threshold=self.CHUNK_SIZE
         )
         self.manifest = {}
+
+    def get_bucket(self, bucket_name):
+        """Get a bucket by name."""
+        return self.s3.Bucket(bucket_name)
 
     def get_region_name(self, bucket):
         """Get the region name of the bucket."""
@@ -119,18 +123,18 @@ class BucketManager:
     @staticmethod
     def hash_data(data):
         """Generate md5 hash for data."""
-        hash = md5()
-        hash.update(data)
+        md5_hash = md5()
+        md5_hash.update(data)
 
-        return hash
+        return md5_hash
 
     def gen_etag(self, path):
         """Generate etag for file."""
         hashes = []
 
-        with open(path, 'rb') as f:
+        with open(path, 'rb') as file:
             while True:
-                data = f.read(self.CHUNK_SIZE)
+                data = file.read(self.CHUNK_SIZE)
 
                 if not data:
                     break
@@ -142,8 +146,8 @@ class BucketManager:
         elif len(hashes) == 1:
             return '"{}"'.format(hashes[0].hexdigest())
         else:
-            hash = self.hash_data(reduce(lambda x, y: x + y, (h.digest() for h in hashes)))
-            return '"{}-{}"'.format(hash.hexdigest(), len(hashes))
+            md5_hash = self.hash_data(reduce(lambda x, y: x + y, (h.digest() for h in hashes)))
+            return '"{}-{}"'.format(md5_hash.hexdigest(), len(hashes))
 
     def upload_file(self, bucket, path, key):
         """Upload a file to S3."""
